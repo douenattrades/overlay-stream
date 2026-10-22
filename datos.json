@@ -4,7 +4,7 @@
     "lunes": null,
     "martes": null,
     "miercoles": -1000,
-    "jueves": null,
+    "jueves": 1000,
     "viernes": null
   }
 }
