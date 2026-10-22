@@ -65,7 +65,6 @@
   panel.style.bottom = (params.has("alto") ? Number(params.get("alto")) : 220) + "px";
   panel.style.left = (params.has("izq") ? Number(params.get("izq")) : 30) + "px";
   const CANAL = (params.get("canal") || "").toLowerCase();
-  const PUSHER_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false";
 
   const DIAS = [
     { clave: "lunes", letra: "L" },
@@ -161,33 +160,32 @@
     return (sender?.slug || "").toLowerCase() === CANAL || badges.includes("broadcaster") || badges.includes("moderator");
   }
 
-  async function idChat() {
-    if (params.get("chatroom")) return params.get("chatroom");
-    try {
-      const r = await fetch(`https://kick.com/api/v2/channels/${CANAL}`);
-      return (await r.json()).chatroom.id;
-    } catch (e) { return null; }
-  }
+  // Kick dejó el chat de Pusher: se leen los últimos mensajes del chat por su API cada 4 s.
+  // Cada mensaje se aplica una sola vez (ids guardados), así !trade no suma dos veces al recargar.
+  const CANAL_ID = params.get("canalid") || "134480495";
+  let hechos = new Set();
+  try { hechos = new Set(JSON.parse(localStorage.getItem("hechos")) || []); } catch (e) {}
+  const guardarHechos = () => { try { localStorage.setItem("hechos", JSON.stringify([...hechos].slice(-500))); } catch (e) {} };
+  const hoyTxt = () => new Date().toDateString();
 
-  async function escucharChat() {
-    if (!CANAL) return;
-    const id = await idChat();
-    if (!id) { setTimeout(escucharChat, 30000); return; }
-    const ws = new WebSocket(PUSHER_URL);
-    ws.onopen = () => ws.send(JSON.stringify({ event: "pusher:subscribe", data: { auth: "", channel: `chatrooms.${id}.v2` } }));
-    ws.onmessage = ev => {
-      let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-      if (m.event === "pusher:ping") { ws.send(JSON.stringify({ event: "pusher:pong", data: {} })); return; }
-      if (m.event !== "App\\Events\\ChatMessageEvent") return;
-      let d; try { d = typeof m.data === "string" ? JSON.parse(m.data) : m.data; } catch (e) { return; }
-      if (puedeMandar(d.sender)) comando(d.content || "");
-    };
-    ws.onclose = () => setTimeout(escucharChat, 5000);
+  async function leerChat() {
+    try {
+      const r = await fetch(`https://kick.com/api/v2/channels/${CANAL_ID}/messages`, { cache: "no-store" });
+      const msgs = (await r.json()).data.messages || [];
+      msgs.slice().reverse().forEach(m => {  // del más antiguo al más nuevo
+        if (hechos.has(m.id)) return;
+        hechos.add(m.id);
+        if (new Date(m.created_at).toDateString() !== hoyTxt()) return;
+        if (puedeMandar(m.sender)) comando(m.content || "");
+      });
+      guardarHechos();
+    } catch (e) {}
   }
 
   cargarBase();
   setInterval(cargarBase, 60000);
-  escucharChat();
+  leerChat();
+  setInterval(leerChat, 4000);
 </script>
 </body>
 </html>

@@ -8,7 +8,7 @@ Overlay de OBS con los resultados de la semana (L M X J V), el total y el winrat
 3. URL: `https://douenattrades.github.io/overlay-stream/?canal=douenattrades&chatroom=134182507`
 4. Ancho **1920**, alto **1080** (ocupa toda la pantalla; el recuadro se coloca solo abajo a la izquierda)
 
-## Comandos en el chat de Kick (solo tú y tus mods)
+## Comandos en el chat de Kick (solo tú y tus mods; el overlay lee el chat cada 4 s)
 | Comando | Qué hace |
 |---|---|
 | `!pnl -300` | Pone el resultado de hoy en −300$ |
