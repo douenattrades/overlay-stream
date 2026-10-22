@@ -61,8 +61,8 @@
   const params = new URLSearchParams(location.search);
   // Tamaño y altura desde la URL: &tam=1.5 (1 = normal) y &alto=120 (píxeles desde abajo)
   const panel = document.querySelector(".panel");
-  panel.style.transform = `scale(${Number(params.get("tam")) || 1.6})`;
-  panel.style.bottom = (params.has("alto") ? Number(params.get("alto")) : 110) + "px";
+  panel.style.transform = `scale(${Number(params.get("tam")) || 2.2})`;
+  panel.style.bottom = (params.has("alto") ? Number(params.get("alto")) : 220) + "px";
   panel.style.left = (params.has("izq") ? Number(params.get("izq")) : 30) + "px";
   const CANAL = (params.get("canal") || "").toLowerCase();
   const PUSHER_URL = "wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false";
