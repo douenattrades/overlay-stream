@@ -6,7 +6,7 @@ Overlay de OBS con los resultados de la semana (L M X J V), el total y el winrat
 1. **+** → **Navegador**
 2. Desmarca **Archivo local**
 3. URL: `https://douenattrades.github.io/overlay-stream/?canal=TUCANAL`
-4. Ancho **470**, alto **110**
+4. Ancho **1920**, alto **1080** (ocupa toda la pantalla; el recuadro se coloca solo abajo a la izquierda)
 
 ## Comandos en el chat de Kick (solo tú y tus mods)
 | Comando | Qué hace |
