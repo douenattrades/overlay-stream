@@ -1,6 +1,8 @@
 # overlay-stream
 
-Overlay de OBS con los resultados de la semana (L M X J V), el total y el winrate.
+Overlay de OBS con los resultados de la semana (L M X J V), el total y el winrate de la semana y del reto entero (desde el 20-10).
+
+`datos.json`: un número por día con fecha (`"2026-10-27": 1000`); los días de esta semana salen en los círculos y todos suman al RETO.
 
 ## Ponerlo en OBS
 1. **+** → **Navegador**

@@ -53,6 +53,11 @@
       <div class="stat"><span class="etiqueta">SEMANA</span><span class="valor" id="total">–</span></div>
       <div class="stat"><span class="etiqueta">WINRATE</span><span class="valor" id="winrate">–</span></div>
     </div>
+    <div class="separador"></div>
+    <div class="stats">
+      <div class="stat"><span class="etiqueta">RETO</span><span class="valor" id="retoTotal">–</span></div>
+      <div class="stat"><span class="etiqueta">WINRATE</span><span class="valor" id="retoWinrate">–</span><span class="cantidad" id="retoGP"></span></div>
+    </div>
   </div>
 <script>
   // Opciones por URL:
@@ -81,9 +86,16 @@
     d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   }
+  // Fecha AAAA-MM-DD del día i de esta semana (0 = lunes)
+  function fechaDeEstaSemana(i) {
+    const [a, m, d] = lunesDeEstaSemana().split("-").map(Number);
+    const f = new Date(a, m - 1, d + i);
+    return `${f.getFullYear()}-${String(f.getMonth() + 1).padStart(2, "0")}-${String(f.getDate()).padStart(2, "0")}`;
+  }
   const claveLocal = () => "semana-" + lunesDeEstaSemana();
 
-  let base = {};     // lo que hay en datos.json (lo actualizo yo desde GitHub)
+  let base = {};      // días de esta semana en datos.json (lo actualizo yo desde GitHub)
+  let historico = {}; // todos los días del reto en datos.json, por fecha AAAA-MM-DD
   let chat = {};     // lo que mandas por el chat con !pnl (tiene prioridad)
   try { chat = JSON.parse(localStorage.getItem(claveLocal())) || {}; } catch (e) {}
   const guardarChat = () => { try { localStorage.setItem(claveLocal(), JSON.stringify(chat)); } catch (e) {} };
@@ -117,13 +129,37 @@
     const wr = jugados ? Math.round(ganados / jugados * 100) : 0;
     w.textContent = jugados ? wr + "%" : "–";
     w.className = "valor " + (jugados ? (wr >= 50 ? "pos" : "neg") : "");
+
+    // Reto entero: histórico de datos.json + lo de esta semana (el chat manda en esta semana)
+    const todos = { ...historico };
+    DIAS.forEach((d, i) => {
+      const valor = d.clave in chat ? chat[d.clave] : base[d.clave];
+      const f = fechaDeEstaSemana(i);
+      if (typeof valor === "number" && !isNaN(valor)) todos[f] = valor; else delete todos[f];
+    });
+    let rTotal = 0, rG = 0, rP = 0, rAlguno = false;
+    Object.values(todos).forEach(v => {
+      if (typeof v !== "number" || isNaN(v)) return;
+      rAlguno = true; rTotal += v;
+      if (v > 0) rG++; else if (v < 0) rP++;
+    });
+    const rt = document.getElementById("retoTotal");
+    rt.textContent = rAlguno ? fmt(rTotal) : "–";
+    rt.className = "valor " + (rAlguno ? signo(rTotal) : "");
+    const rj = rG + rP, rwr = rj ? Math.round(rG / rj * 100) : 0;
+    const rw = document.getElementById("retoWinrate");
+    rw.textContent = rj ? rwr + "%" : "–";
+    rw.className = "valor " + (rj ? (rwr >= 50 ? "pos" : "neg") : "");
+    document.getElementById("retoGP").textContent = rj ? `${rG}G · ${rP}P` : "";
   }
 
   async function cargarBase() {
     try {
       const r = await fetch("datos.json?t=" + Date.now(), { cache: "no-store" });
       const j = await r.json();
-      base = j.semana === lunesDeEstaSemana() ? (j.dias || {}) : {};
+      historico = j.dias || {};
+      base = {};
+      DIAS.forEach((d, i) => { const f = fechaDeEstaSemana(i); if (f in historico) base[d.clave] = historico[f]; });
     } catch (e) {}
     pintar();
   }
